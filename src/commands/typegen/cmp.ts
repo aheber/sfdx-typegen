@@ -122,7 +122,6 @@ export default class Generate extends SfdxCommand {
     let attributeString = "";
     if (component["aura:attribute"] != undefined) {
       component["aura:attribute"].forEach(attribute => {
-        // TODO: Map Aura types to ts types
         // Check for apex types
         attribute.$.type = this.translateType(attribute.$.type);
         attributes.push(attribute.$);
