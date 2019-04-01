@@ -1,0 +1,4 @@
+{
+  "commandDescription": "Export types from existing Helper.ts files, should preserve typing information from the functions and properties and export to usable declarations",
+  "fileFlagDescription": "Glob pattern for helper typescript files, [force-app/**/aura/**/*Helper.ts]"
+}
