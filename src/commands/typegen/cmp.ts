@@ -16,8 +16,8 @@ export default class Generate extends SfdxCommand {
   public static description = messages.getMessage("commandDescription");
 
   public static examples = [
-    `$ sfdx typegen:cmp --file force-app/**/aura/*.cmp`,
-    `$ sfdx typegen:cmp --file force-app/**/aura/*.cmp --apextypespath types/apex`,
+    `$ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp`,
+    `$ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp --apextypespath types/apex`,
     `$ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp`
   ];
 
@@ -29,7 +29,7 @@ export default class Generate extends SfdxCommand {
       char: "f",
       description: messages.getMessage("fileFlagDescription"),
       required: false,
-      default: "force-app/**/aura/*.cmp"
+      default: "force-app/**/aura/**/*.cmp"
     }),
     apextypespath: flags.string({
       char: "a",
@@ -88,7 +88,7 @@ export default class Generate extends SfdxCommand {
   private async indexApexTypes() {
     let that = this;
     return new Promise(function(resolve, reject) {
-      console.log("Apex Path:", that.flags.apextypespath + "/*.d.ts");
+      // console.log("Apex Path:", that.flags.apextypespath + "/*.d.ts");
       glob(that.flags.apextypespath + "/*.d.ts", function(err, files) {
         if (err) {
           reject(err);
@@ -268,7 +268,6 @@ ${attributeString}${methodString}${findComponentString}${eventString}}
   };
   private translateType(type: string): string {
     let isArray = type.indexOf("[]") >= 0;
-    // console.log("Type:", type, "--isArray", isArray);
     type = type.replace("[]", "");
     if (this.typeMap[type.toLowerCase()] != undefined) {
       type = this.typeMap[type.toLowerCase()];

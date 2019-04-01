@@ -18,7 +18,7 @@ export default class Generate extends SfdxCommand {
 
   public static examples = [
     `$ sfdx typegen:helper`,
-    `$ sfdx typegen:helper --file force-app/**/aura/*Helper.ts`,
+    `$ sfdx typegen:helper --file force-app/**/aura/**/*Helper.ts`,
     `$ sfdx typegen:helper --file force-app/main/default/aura/TestComponent/TestComponentHelper.cmp`
   ];
 
@@ -28,7 +28,7 @@ export default class Generate extends SfdxCommand {
       char: "f",
       description: messages.getMessage("fileFlagDescription"),
       required: false,
-      default: "force-app/**/aura/*Helper.ts"
+      default: "force-app/**/aura/**/*Helper.ts"
     })
   };
 

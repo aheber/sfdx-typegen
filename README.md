@@ -30,54 +30,56 @@ USAGE
 ```
 <!-- usagestop -->
 <!-- commands -->
-* [`sfdx-typegen <%= command.id %> -f <string> [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx-typegen--commandid---f-string--a-string---json---loglevel-tracedebuginfowarnerrorfatal)
-* [`sfdx-typegen <%= command.id %> -f <string> [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx-typegen--commandid---f-string---json---loglevel-tracedebuginfowarnerrorfatal)
+* [`sfdx-typegen <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx-typegen--commandid---f-string--a-string---json---loglevel-tracedebuginfowarnerrorfatal)
+* [`sfdx-typegen <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx-typegen--commandid---f-string---json---loglevel-tracedebuginfowarnerrorfatal)
 
-## `sfdx-typegen <%= command.id %> -f <string> [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
+## `sfdx-typegen <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
 
 Generate component types that can be used in your controller and helper files to improve auto-complete and correctness
 
 ```
 USAGE
-  $ sfdx-typegen typegen:cmp -f <string> [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
+  $ sfdx-typegen typegen:cmp [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
 
 OPTIONS
-  -a, --apextypespath=apextypespath               Path to typing directory that holds compatible types for AuraEnabled
-                                                  properties in Apex controllers and classes
+  -a, --apextypespath=apextypespath               [default: types/apex] Path to typing directory that holds compatible
+                                                  types for AuraEnabled properties in Apex controllers and classes
 
-  -f, --filename=filename                         (required) Glob pattern for cmp files, [force-app/**/aura/**/*.cmp]
+  -f, --file=file                                 [default: force-app/**/aura/*.cmp] Glob pattern for cmp files,
+                                                  [force-app/**/aura/**/*.cmp]
 
   --json                                          format output as json
 
   --loglevel=(trace|debug|info|warn|error|fatal)  [default: warn] logging level for this command invocation
 
 EXAMPLES
-  $ sfdx typegen:cmp --filename force-app/**/aura/*.cmp
-  $ sfdx typegen:cmp --filename force-app/**/aura/*.cmp --apextypespath types/apex
-  $ sfdx typegen:cmp --filename force-app/main/default/aura/TestComponent/TestComponent.cmp
+  $ sfdx typegen:cmp --file force-app/**/aura/*.cmp
+  $ sfdx typegen:cmp --file force-app/**/aura/*.cmp --apextypespath types/apex
+  $ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp
 ```
 
 _See code: [src\commands\typegen\cmp.ts](https://github.com/aheber/sfdx-typegen/blob/v0.0.0/src\commands\typegen\cmp.ts)_
 
-## `sfdx-typegen <%= command.id %> -f <string> [--json] [--loglevel trace|debug|info|warn|error|fatal]`
+## `sfdx-typegen <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
 
 Export types from existing Helper.ts files, should preserve typing information from the functions and properties and export to usable declarations
 
 ```
 USAGE
-  $ sfdx-typegen typegen:helper -f <string> [--json] [--loglevel trace|debug|info|warn|error|fatal]
+  $ sfdx-typegen typegen:helper [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
 
 OPTIONS
-  -f, --filename=filename                         (required) Glob pattern for helper typescript files,
-                                                  [force-app/**/aura/**/*Helper.ts]
+  -f, --file=file                                 [default: force-app/**/aura/*Helper.ts] Glob pattern for helper
+                                                  typescript files, [force-app/**/aura/**/*Helper.ts]
 
   --json                                          format output as json
 
   --loglevel=(trace|debug|info|warn|error|fatal)  [default: warn] logging level for this command invocation
 
 EXAMPLES
-  $ sfdx typegen:helper --filename force-app/**/aura/*Helper.ts
-  $ sfdx typegen:helper --filename force-app/main/default/aura/TestComponent/TestComponentHelper.cmp
+  $ sfdx typegen:helper
+  $ sfdx typegen:helper --file force-app/**/aura/*Helper.ts
+  $ sfdx typegen:helper --file force-app/main/default/aura/TestComponent/TestComponentHelper.cmp
 ```
 
 _See code: [src\commands\typegen\helper.ts](https://github.com/aheber/sfdx-typegen/blob/v0.0.0/src\commands\typegen\helper.ts)_
