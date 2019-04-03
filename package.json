@@ -1,7 +1,7 @@
 {
   "name": "sfdx-typegen",
-  "description": "Type generation from SFDX project",
-  "version": "0.0.0",
+  "description": "Type generation for SFDX projects",
+  "version": "0.1.1",
   "author": "Anthony Heber @aheber",
   "bugs": "https://github.com/aheber/sfdx-typegen/issues",
   "dependencies": {
@@ -12,6 +12,7 @@
     "@salesforce/core": "^1.0.1",
     "glob": "^7.1.3",
     "tslib": "1",
+    "typescript": "^3.0",
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
@@ -28,8 +29,7 @@
     "nyc": "^13",
     "rimraf": "^2.6.3",
     "sinon": "5",
-    "ts-node": "^7",
-    "typescript": "^3.0"
+    "ts-node": "^7"
   },
   "engines": {
     "node": ">=8.0.0"
@@ -48,10 +48,11 @@
   "oclif": {
     "commands": "./lib/commands",
     "topics": {
-      "typegen": {
-        "description": "Generate typescript declaration files for components and helpers"
+      "typegen:aura": {
+        "description": "Generate typescript declaration files for Aura components and helpers"
       }
     },
+    "bin": "sfdx",
     "devPlugins": [
       "@oclif/plugin-help"
     ]

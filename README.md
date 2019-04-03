@@ -1,5 +1,4 @@
-sfdx-typegen
-============
+# sfdx-typegen
 
 Type generation from SFDX project
 
@@ -13,63 +12,62 @@ Type generation from SFDX project
 [![License](https://img.shields.io/npm/l/sfdx-typegen.svg)](https://github.com/aheber/sfdx-typegen/blob/master/package.json)
 
 <!-- toc -->
-* [Debugging your plugin](#debugging-your-plugin)
+* [sfdx-typegen](#sfdx-typegen)
 <!-- tocstop -->
 <!-- install -->
 <!-- usage -->
 ```sh-session
 $ npm install -g sfdx-typegen
-$ sfdx-typegen COMMAND
+$ sfdx COMMAND
 running command...
-$ sfdx-typegen (-v|--version|version)
-sfdx-typegen/0.0.0 win32-x64 node-v10.15.3
-$ sfdx-typegen --help [COMMAND]
+$ sfdx (-v|--version|version)
+sfdx-typegen/0.1.1 win32-x64 node-v8.11.1
+$ sfdx --help [COMMAND]
 USAGE
-  $ sfdx-typegen COMMAND
+  $ sfdx COMMAND
 ...
 ```
 <!-- usagestop -->
 <!-- commands -->
-* [`sfdx-typegen <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx-typegen--commandid---f-string--a-string---json---loglevel-tracedebuginfowarnerrorfatal)
-* [`sfdx-typegen <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx-typegen--commandid---f-string---json---loglevel-tracedebuginfowarnerrorfatal)
+* [`sfdx <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx--commandid---f-string--a-string---json---loglevel-tracedebuginfowarnerrorfatal)
+* [`sfdx <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx--commandid---f-string---json---loglevel-tracedebuginfowarnerrorfatal)
 
-## `sfdx-typegen <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
+## `sfdx <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
 
 Generate component types that can be used in your controller and helper files to improve auto-complete and correctness
 
 ```
 USAGE
-  $ sfdx-typegen typegen:cmp [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
+  $ sfdx typegen:aura:cmp [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
 
 OPTIONS
   -a, --apextypespath=apextypespath               [default: types/apex] Path to typing directory that holds compatible
                                                   types for AuraEnabled properties in Apex controllers and classes
 
-  -f, --file=file                                 [default: force-app/**/aura/*.cmp] Glob pattern for cmp files,
-                                                  [force-app/**/aura/**/*.cmp]
+  -f, --file=file                                 [default: force-app/**/aura/**/*.cmp] Glob pattern for cmp files
 
   --json                                          format output as json
 
   --loglevel=(trace|debug|info|warn|error|fatal)  [default: warn] logging level for this command invocation
 
 EXAMPLES
-  $ sfdx typegen:cmp --file force-app/**/aura/*.cmp
-  $ sfdx typegen:cmp --file force-app/**/aura/*.cmp --apextypespath types/apex
+  $ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp
+  $ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp --apextypespath types/apex
   $ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp
 ```
 
-_See code: [src\commands\typegen\cmp.ts](https://github.com/aheber/sfdx-typegen/blob/v0.0.0/src\commands\typegen\cmp.ts)_
+_See code: [lib\commands\typegen\aura\cmp.js](https://github.com/aheber/sfdx-typegen/blob/v0.1.1/lib\commands\typegen\aura\cmp.js)_
 
-## `sfdx-typegen <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
+## `sfdx <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
 
 Export types from existing Helper.ts files, should preserve typing information from the functions and properties and export to usable declarations
 
 ```
 USAGE
-  $ sfdx-typegen typegen:helper [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
+  $ sfdx typegen:aura:helper [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
 
 OPTIONS
-  -f, --file=file                                 [default: force-app/**/aura/*Helper.ts] Glob pattern for helper
+  -f, --file=file                                 [default: force-app/**/aura/**/*Helper.ts] Glob pattern for helper
                                                   typescript files, [force-app/**/aura/**/*Helper.ts]
 
   --json                                          format output as json
@@ -78,33 +76,9 @@ OPTIONS
 
 EXAMPLES
   $ sfdx typegen:helper
-  $ sfdx typegen:helper --file force-app/**/aura/*Helper.ts
+  $ sfdx typegen:helper --file force-app/**/aura/**/*Helper.ts
   $ sfdx typegen:helper --file force-app/main/default/aura/TestComponent/TestComponentHelper.cmp
 ```
 
-_See code: [src\commands\typegen\helper.ts](https://github.com/aheber/sfdx-typegen/blob/v0.0.0/src\commands\typegen\helper.ts)_
+_See code: [lib\commands\typegen\aura\helper.js](https://github.com/aheber/sfdx-typegen/blob/v0.1.1/lib\commands\typegen\aura\helper.js)_
 <!-- commandsstop -->
-<!-- debugging-your-plugin -->
-# Debugging your plugin
-We recommend using the Visual Studio Code (VS Code) IDE for your plugin development. Included in the `.vscode` directory of this plugin is a `launch.json` config file, which allows you to attach a debugger to the node process when running your commands.
-
-To debug the `hello:org` command: 
-1. Start the inspector
-  
-If you linked your plugin to the sfdx cli, call your command with the `dev-suspend` switch: 
-```sh-session
-$ sfdx hello:org -u myOrg@example.com --dev-suspend
-```
-  
-Alternatively, to call your command using the `bin/run` script, set the `NODE_OPTIONS` environment variable to `--inspect-brk` when starting the debugger:
-```sh-session
-$ NODE_OPTIONS=--inspect-brk bin/run hello:org -u myOrg@example.com
-```
-
-2. Set some breakpoints in your command code
-3. Click on the Debug icon in the Activity Bar on the side of VS Code to open up the Debug view.
-4. In the upper left hand corner of VS Code, verify that the "Attach to Remote" launch configuration has been chosen.
-5. Hit the green play button to the left of the "Attach to Remote" launch configuration window. The debugger should now be suspended on the first line of the program. 
-6. Hit the green play button at the top middle of VS Code (this play button will be to the right of the play button that you clicked in step #5).
-<br><img src=".images/vscodeScreenshot.png" width="480" height="278"><br>
-Congrats, you are debugging!
