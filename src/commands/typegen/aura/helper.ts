@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as xml2js from "xml2js";
 import * as glob from "glob";
+import * as mkdirp from "mkdirp";
 
 // Initialize Messages with the current plugin directory
 core.Messages.importMessagesDirectory(__dirname);
@@ -29,6 +30,12 @@ export default class Generate extends SfdxCommand {
       description: messages.getMessage("fileFlagDescription"),
       required: false,
       default: "force-app/**/aura/**/*Helper.ts"
+    }),
+    output: flags.string({
+      char: "o",
+      description: messages.getMessage("outputFlagDescription"),
+      required: false,
+      default: ".sfdx/typings/aura"
     })
   };
 
@@ -36,8 +43,13 @@ export default class Generate extends SfdxCommand {
   // protected static requiresProject = true;
 
   public async run(): Promise<AnyJson> {
+    // TODO: ensure output path exists
     let that = this;
 
+    // Ensure the output directory exists
+    mkdirp(this.flags.output, function(err) {
+      if (err) console.error(err);
+    });
     // Parse a file
     glob(this.flags.file, function(err, files) {
       files.forEach(file => {
@@ -52,7 +64,7 @@ export default class Generate extends SfdxCommand {
         let dirPath = path.parse(file);
         that.buildDTS(componentName, sourceFile).then(dts => {
           // console.log(dts);
-          that.writeFile(dirPath.dir, dts);
+          that.writeFile(dirPath.name, dts);
         });
       });
     });
@@ -65,8 +77,8 @@ export default class Generate extends SfdxCommand {
     return folders[folders.length - 1];
   }
 
-  private writeFile(directory: string, dts: string): void {
-    let destFilename = directory + "/Helper.d.ts";
+  private writeFile(filename: string, dts: string): void {
+    let destFilename = this.flags.output + "/" + filename + ".d.ts";
     // console.log(destFilename);
     fs.writeFile(destFilename, dts, err => {
       // throws an error, you could also catch it here

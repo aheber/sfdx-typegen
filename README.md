@@ -21,7 +21,7 @@ $ npm install -g sfdx-typegen
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-sfdx-typegen/0.1.1 win32-x64 node-v8.11.1
+sfdx-typegen/0.2.0 win32-x64 node-v8.11.1
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
@@ -29,22 +29,26 @@ USAGE
 ```
 <!-- usagestop -->
 <!-- commands -->
-* [`sfdx <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx--commandid---f-string--a-string---json---loglevel-tracedebuginfowarnerrorfatal)
-* [`sfdx <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx--commandid---f-string---json---loglevel-tracedebuginfowarnerrorfatal)
+* [`sfdx <%= command.id %> [-f <string>] [-a <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx--commandid---f-string--a-string--o-string---json---loglevel-tracedebuginfowarnerrorfatal)
+* [`sfdx <%= command.id %> [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`](#sfdx--commandid---f-string--o-string---json---loglevel-tracedebuginfowarnerrorfatal)
 
-## `sfdx <%= command.id %> [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
+## `sfdx <%= command.id %> [-f <string>] [-a <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
 
 Generate component types that can be used in your controller and helper files to improve auto-complete and correctness
 
 ```
 USAGE
-  $ sfdx typegen:aura:cmp [-f <string>] [-a <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
+  $ sfdx typegen:aura:cmp [-f <string>] [-a <string>] [-o <string>] [--json] [--loglevel 
+  trace|debug|info|warn|error|fatal]
 
 OPTIONS
   -a, --apextypespath=apextypespath               [default: types/apex] Path to typing directory that holds compatible
                                                   types for AuraEnabled properties in Apex controllers and classes
 
   -f, --file=file                                 [default: force-app/**/aura/**/*.cmp] Glob pattern for cmp files
+
+  -o, --output=output                             [default: .sfdx/typings/aura/] Path to typing output directory,
+                                                  typically embedded in the project '.sfdx' directory
 
   --json                                          format output as json
 
@@ -56,19 +60,22 @@ EXAMPLES
   $ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp
 ```
 
-_See code: [lib\commands\typegen\aura\cmp.js](https://github.com/aheber/sfdx-typegen/blob/v0.1.1/lib\commands\typegen\aura\cmp.js)_
+_See code: [lib\commands\typegen\aura\cmp.js](https://github.com/aheber/sfdx-typegen/blob/v0.2.0/lib\commands\typegen\aura\cmp.js)_
 
-## `sfdx <%= command.id %> [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
+## `sfdx <%= command.id %> [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
 
 Export types from existing Helper.ts files, should preserve typing information from the functions and properties and export to usable declarations
 
 ```
 USAGE
-  $ sfdx typegen:aura:helper [-f <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
+  $ sfdx typegen:aura:helper [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]
 
 OPTIONS
   -f, --file=file                                 [default: force-app/**/aura/**/*Helper.ts] Glob pattern for helper
                                                   typescript files, [force-app/**/aura/**/*Helper.ts]
+
+  -o, --output=output                             [default: .sfdx/typings/aura] Path to an output destination for
+                                                  generated d.ts files
 
   --json                                          format output as json
 
@@ -80,5 +87,5 @@ EXAMPLES
   $ sfdx typegen:helper --file force-app/main/default/aura/TestComponent/TestComponentHelper.cmp
 ```
 
-_See code: [lib\commands\typegen\aura\helper.js](https://github.com/aheber/sfdx-typegen/blob/v0.1.1/lib\commands\typegen\aura\helper.js)_
+_See code: [lib\commands\typegen\aura\helper.js](https://github.com/aheber/sfdx-typegen/blob/v0.2.0/lib\commands\typegen\aura\helper.js)_
 <!-- commandsstop -->

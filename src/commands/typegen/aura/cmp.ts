@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as xml2js from "xml2js";
 import * as path from "path";
 import * as glob from "glob";
+import * as mkdirp from "mkdirp";
 
 // Initialize Messages with the current plugin directory
 core.Messages.importMessagesDirectory(__dirname);
@@ -36,6 +37,12 @@ export default class Generate extends SfdxCommand {
       description: messages.getMessage("apextypespathFlagDescription"),
       required: false,
       default: "types/apex"
+    }),
+    output: flags.string({
+      char: "o",
+      description: messages.getMessage("outputFlagDescription"),
+      required: false,
+      default: ".sfdx/typings/aura/"
     })
   };
 
@@ -43,6 +50,11 @@ export default class Generate extends SfdxCommand {
   // protected static requiresProject = true;
 
   public async run(): Promise<AnyJson> {
+    // console.log("Running from:", process.cwd());
+    // Ensure the output directory exists
+    mkdirp(this.flags.output, function(err) {
+      if (err) console.error(err);
+    });
     await this.indexApexTypes();
     let that = this;
     // read and parse XML file
@@ -184,14 +196,14 @@ export default class Generate extends SfdxCommand {
     }
     let generatedtypeFile = `declare namespace Cmp.c {
   interface _${filename} extends Aura.Component {
-${attributeString}${methodString}${findComponentString}${eventString}}
+${attributeString}${methodString}${findComponentString}${eventString}  }
 
   type ${filename} = _${filename}${base}${controller};
 }
 `;
     // console.log(generatedtypeFile);
     // return;
-    let destFilename = folders + "/Cmp.d.ts";
+    let destFilename = this.flags.output + "/" + filename + ".d.ts";
     fs.writeFile(destFilename, generatedtypeFile, err => {
       // throws an error, you could also catch it here
       if (err) throw err;
