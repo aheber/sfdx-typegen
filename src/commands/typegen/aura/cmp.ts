@@ -149,13 +149,8 @@ export default class Generate extends SfdxCommand {
       });
     }
 
-    let findComponentString = "";
-
-    let auraIdCount = this.countAuraIds("aura:component", component);
-    // console.log(auraIdCount);
-    Object.keys(auraIdCount).forEach(auraId => {
-      findComponentString += `    find(name: "${auraId}"): Aura.Component | Aura.Component[] | undefined;\n`;
-    });
+    let idData = this.countAuraIds(["aura:component"], component);
+    let findComponentString = this.buildFindStrings(idData);
 
     let eventString = "";
 
@@ -210,55 +205,109 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
     });
   }
 
-  private countAuraIds(cmpType: string, component: any) {
+  private buildFindStrings(idData: IdData): string {
+    let findComponentString = "";
+    let returnTypes = [];
+
+    Object.keys(idData).forEach(key => {
+      returnTypes = [];
+      let canReturnUndefined: boolean;
+      let keyCounts = {};
+      idData[key].forEach(comp => {
+        if (keyCounts[comp.tag] == undefined) {
+          keyCounts[comp.tag] = 1;
+        } else {
+          keyCounts[comp.tag]++;
+        }
+        comp.lineage.forEach(p => {
+          let lP = p.toLowerCase();
+          if (lP == "aura:iteration") {
+            keyCounts[comp.tag]++;
+            canReturnUndefined = true;
+          }
+          if (lP == "aura:if") {
+            canReturnUndefined = true;
+          }
+        });
+      });
+
+      // components nested in variable rendering elements might not always be present
+      if (canReturnUndefined === true) {
+        returnTypes.push("undefined");
+      }
+      // if there is more than one type of component holding the ID then might return an array of components
+      if (Object.keys(keyCounts).length > 1) {
+        returnTypes.push("Aura.Component[]");
+      }
+      Object.keys(keyCounts).forEach(cKey => {
+        let cmpName = "";
+        let parts = cKey.split(":");
+        if (parts.length == 1) {
+          cmpName = "Aura.Component";
+        } else {
+          cmpName = "Cmp." + parts.join(".");
+        }
+        returnTypes.push(cmpName);
+        if (keyCounts[cKey] > 1) {
+          returnTypes.push(cmpName + "[]");
+        }
+      });
+
+      let rTypes = returnTypes.join(" | ");
+      findComponentString += `    find(name: "${key}"): ${rTypes};\n`;
+    });
+
+    return findComponentString;
+  }
+
+  private countAuraIds(parentChain: string[], component: any): IdData {
     let that = this;
-    let auraIdCount: { [s: string]: { [s: string]: number } } = {};
+    let componentName = parentChain[parentChain.length - 1];
+    let idData: IdData = {};
     if (component == undefined || component == null) {
-      return auraIdCount;
+      return idData;
     }
-    // console.log("Component:", component);
-    // console.log("Keys:", Object.keys(component));
     Object.keys(component).forEach(key => {
-      // console.log("CMP:", key);
-      if (key.toLowerCase() == "aura:id") {
-        // console.log("Aura Id:", component[key]);
-        let auraId = component[key];
-        that.logAuraId(auraIdCount, cmpType, auraId);
-        // console.log(Array.isArray(component[key]));
+      if (key.toLowerCase() == "$") {
+        let attributes = component[key];
+        Object.keys(attributes).forEach(aKey => {
+          if (aKey.toLowerCase() == "aura:id") {
+            // add to IdData
+            let parents = [...parentChain];
+            parents.pop();
+            let compObj = { lineage: parents, tag: componentName };
+            let aId = attributes[aKey];
+            if (idData[aId] == undefined) {
+              idData[aId] = [compObj];
+            } else {
+              idData[aId].push(compObj);
+            }
+            // console.log(
+            //   "Attribute",
+            //   aKey,
+            //   "for",
+            //   componentName,
+            //   ":",
+            //   attributes[aKey]
+            // );
+          }
+        });
       }
       if (Array.isArray(component[key])) {
-        component[key].forEach(aKey => {
-          // console.log("In Array:", aKey);
-          let newIdCounts = that.countAuraIds(key, aKey);
-          Object.keys(newIdCounts).forEach(auraId => {
-            that.logAuraId(auraIdCount, key, auraId);
+        component[key].forEach(cKey => {
+          let childIds = that.countAuraIds([...parentChain, key], cKey);
+          // Merge IdData together
+          Object.keys(childIds).forEach(key => {
+            if (idData[key] == undefined) {
+              idData[key] = childIds[key];
+            } else {
+              idData[key].push(...childIds[key]);
+            }
           });
-        });
-      } else if (typeof component[key] == "object") {
-        // console.log("Running on non-array:", component[key]);
-        // console.log("Its keys:", Object.keys(component[key]));
-        let newIdCounts = that.countAuraIds(key, component[key]);
-        Object.keys(newIdCounts).forEach(auraId => {
-          that.logAuraId(auraIdCount, cmpType, auraId);
         });
       }
     });
-    // console.log(auraIdCount);
-    return auraIdCount;
-  }
-
-  private logAuraId(
-    auraIdCount: { [s: string]: { [s: string]: number } },
-    comp: string,
-    key: string
-  ) {
-    if (auraIdCount[key] == undefined) {
-      auraIdCount[key] = {};
-    }
-    if (auraIdCount[key][comp] == undefined) {
-      auraIdCount[key][comp] = 0;
-    }
-    auraIdCount[key][comp]++;
+    return idData;
   }
 
   // Used to map Java type info to typescript types
@@ -293,3 +342,6 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
     return type;
   }
 }
+type IdData = {
+  [auraid: string]: [{ lineage: string[]; tag: string }];
+};
