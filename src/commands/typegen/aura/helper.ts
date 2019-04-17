@@ -94,17 +94,20 @@ export default class Generate extends SfdxCommand {
 
     let propStrings: string[] = [];
     root.properties
-      .filter(prop => prop.kind == ts.SyntaxKind.PropertyAssignment)
+      .filter(prop => {
+        // console.log(ts.SyntaxKind[prop.kind]);
+        return prop.kind == ts.SyntaxKind.PropertyAssignment;
+      })
       .forEach(prop => {
         let name = prop.name;
         let propName;
         // Collect property name
         switch (name.kind) {
           case ts.SyntaxKind.Identifier:
-            propName = (name as ts.Identifier).getText();
+            propName = (name as ts.Identifier).getFullText();
             break;
           case ts.SyntaxKind.StringLiteral:
-            propName = (name as ts.StringLiteral).text;
+            propName = (name as ts.StringLiteral).getFullText();
             break;
         }
         // console.log("Property Name:" + propName);
@@ -112,8 +115,10 @@ export default class Generate extends SfdxCommand {
         let types: string[] = [];
         // TODO: collect comments preceeding the property
         prop.getChildren().forEach(val => {
-          propertyHandled = true;
+          let localPropertyHandled = true;
+          // console.log("Kind:", val.kind);
           types.push(ts.SyntaxKind[val.kind]);
+          // console.log(val.getFullText());
           // Add typing for the various types of properties
           switch (val.kind) {
             case ts.SyntaxKind.FunctionExpression:
@@ -123,24 +128,28 @@ export default class Generate extends SfdxCommand {
               break;
             case ts.SyntaxKind.TypeAssertionExpression:
               propStrings.push(
-                buildPropertyString(propName, <ts.TypeAssertion>val)
+                buildPropertyString(
+                  propName,
+                  val,
+                  (<ts.TypeAssertion>val).type.getText()
+                )
               );
               break;
             // TODO: maybe type this better later
             case ts.SyntaxKind.ObjectLiteralExpression: // objects {identifier: {something: "value", ...}}, {identifier: {}}
             case ts.SyntaxKind.NullKeyword: // Don't know what this will be {identifier: null}
             case ts.SyntaxKind.UndefinedKeyword: // Don't know what this will be {identifier: undefined}
-              propStrings.push(`${propName}:any;`);
+              propStrings.push(buildPropertyString(propName, val, "any"));
               break;
             case ts.SyntaxKind.FirstLiteralToken: // literal numbers {identifier: 100}
-              propStrings.push(`${propName}:number;`);
+              propStrings.push(buildPropertyString(propName, val, "number"));
               break;
             case ts.SyntaxKind.FalseKeyword: // raw `false` {identifier: false}
             case ts.SyntaxKind.TrueKeyword: // raw `true` {identifier: true}
-              propStrings.push(`${propName}:boolean;`);
+              propStrings.push(buildPropertyString(propName, val, "boolean"));
               break;
             case ts.SyntaxKind.StringLiteral: // enclosed text `"hello world"` {identifier: "hello world"}
-              propStrings.push(`${propName}:string;`);
+              propStrings.push(buildPropertyString(propName, val, "string"));
               break;
             case ts.SyntaxKind.ArrayLiteralExpression:
               propStrings.push(
@@ -148,10 +157,13 @@ export default class Generate extends SfdxCommand {
               );
               break;
             default:
-              propertyHandled = false;
+              localPropertyHandled = false;
+          }
+          if (localPropertyHandled === true) {
+            propertyHandled = true;
           }
         });
-        if (propertyHandled === false) {
+        if (propertyHandled === undefined) {
           throw Error(
             "Unhandled property in " +
               sourceFile.fileName +
@@ -181,18 +193,33 @@ export default class Generate extends SfdxCommand {
   }
 }`;
     }
-    function buildPropertyString(methodName: string, node: ts.TypeAssertion) {
-      let typeName = node.type.getText();
-      let signature = `${methodName}: ${typeName};`;
-      return signature;
+    function buildPropertyString(
+      propName: string,
+      node: ts.Node,
+      baseReturnType: string
+    ): string {
+      let returnType = baseReturnType;
+      let jsDocTags = ts.getJSDocTags(node);
+      jsDocTags.forEach(doc => {
+        if (doc.tagName.getText() == "type") {
+          let dType = <ts.JSDocTypeTag>doc;
+          returnType = dType.typeExpression.type.getText();
+        }
+      });
+      return `${propName}:${returnType};`;
     }
+    // function buildPropertyString(methodName: string, node: ts.TypeAssertion) {
+    //   let typeName = node.type.getText();
+    //   let signature = `${methodName}: ${typeName};`;
+    //   return signature;
+    // }
 
     async function getBaseComponent(filename: string): Promise<string> {
       return new Promise((resolve, reject) => {
         var parser = new xml2js.Parser();
         let baseCmp = "";
         // read cmp file
-        let cmpFilename = filename.replace(/[Hh]elper.ts/, ".cmp");
+        let cmpFilename = filename.replace(/[Hh]elper.[tj]s/, ".cmp");
         fs.readFile(cmpFilename, function(err, data) {
           if (err) {
             // console.error(err);
@@ -223,22 +250,51 @@ export default class Generate extends SfdxCommand {
       });
     }
 
-    // TODO: try and assertain if this returns, and if so what is the return type
     function buildFunctionString(
       methodName: string,
       node: ts.FunctionExpression
     ): string {
+      let jsDocTags = ts.getJSDocTags(node);
+      let tagTypeMap = {};
+      let returnType = "any";
+      if (jsDocTags != null) {
+        jsDocTags.forEach(tag => {
+          if (tag.tagName.getText() === "param") {
+            let paramTag = <ts.JSDocParameterTag>tag;
+            tagTypeMap[
+              paramTag.name.getText()
+            ] = paramTag.typeExpression.type.getText();
+            // console.log("Tag Name:", tag.tagName.getText());
+            // tagTypeMap[tag.]
+          }
+          if (tag.tagName.getText() === "returns") {
+            let returnTag = <ts.JSDocReturnTag>tag;
+            returnType = returnTag.typeExpression.type.getText();
+          }
+        });
+      }
       let params: string[] = [];
+      // TODO: throw error if type in JSDoc doesn't match parameter type or if JSDoc lists too many or not enough params
+      if (node.type !== undefined) {
+        returnType = node.type.getText();
+      }
       node.parameters.forEach(param => {
         if (node.parameters[0] === param && param.name.getText() === "this") {
           // "this" first argument is a convenience definition only useful inside the function, not needed for the definition
           return;
         }
-        params.push(param.getText());
+        let typeString = "";
+        if (
+          param.type == null &&
+          tagTypeMap[param.name.getText()] != undefined
+        ) {
+          typeString = `: ${tagTypeMap[param.name.getText()]}`;
+        }
+        params.push(`${param.getText()}${typeString}`);
       });
 
       let paramString = params.join(", ");
-      let signature = `${methodName}(${paramString});`;
+      let signature = `${methodName}(${paramString}): ${returnType};`;
       return signature;
     }
 

@@ -131,7 +131,8 @@ export default class Generate extends SfdxCommand {
       controller = " & Apex." + component.$.controller;
     }
 
-    let attributeString = "";
+    let attributeString = `    get(key: "v.body"): Aura.Component[];\n`;
+    attributeString += `    set(key: "v.body", value: Aura.Component[]): void;\n`;
     if (component["aura:attribute"] != undefined) {
       component["aura:attribute"].forEach(attribute => {
         // Check for apex types
@@ -282,14 +283,6 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
             } else {
               idData[aId].push(compObj);
             }
-            // console.log(
-            //   "Attribute",
-            //   aKey,
-            //   "for",
-            //   componentName,
-            //   ":",
-            //   attributes[aKey]
-            // );
           }
         });
       }
