@@ -261,9 +261,11 @@ export default class Generate extends SfdxCommand {
         jsDocTags.forEach(tag => {
           if (tag.tagName.getText() === "param") {
             let paramTag = <ts.JSDocParameterTag>tag;
-            tagTypeMap[
-              paramTag.name.getText()
-            ] = paramTag.typeExpression.type.getText();
+            if (paramTag.typeExpression) {
+              tagTypeMap[
+                paramTag.name.getText()
+              ] = paramTag.typeExpression.type.getText();
+            }
             // console.log("Tag Name:", tag.tagName.getText());
             // tagTypeMap[tag.]
           }

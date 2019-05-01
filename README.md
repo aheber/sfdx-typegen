@@ -21,7 +21,7 @@ $ npm install -g sfdx-typegen
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-sfdx-typegen/0.4.0 win32-x64 node-v8.11.1
+sfdx-typegen/0.4.1 win32-x64 node-v8.11.1
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
@@ -60,7 +60,7 @@ EXAMPLES
   $ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp
 ```
 
-_See code: [lib\commands\typegen\aura\cmp.js](https://github.com/aheber/sfdx-typegen/blob/v0.4.0/lib\commands\typegen\aura\cmp.js)_
+_See code: [lib\commands\typegen\aura\cmp.js](https://github.com/aheber/sfdx-typegen/blob/v0.4.1/lib\commands\typegen\aura\cmp.js)_
 
 ## `sfdx <%= command.id %> [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal]`
 
@@ -87,5 +87,5 @@ EXAMPLES
   $ sfdx typegen:helper --file force-app/main/default/aura/TestComponent/TestComponentHelper.cmp
 ```
 
-_See code: [lib\commands\typegen\aura\helper.js](https://github.com/aheber/sfdx-typegen/blob/v0.4.0/lib\commands\typegen\aura\helper.js)_
+_See code: [lib\commands\typegen\aura\helper.js](https://github.com/aheber/sfdx-typegen/blob/v0.4.1/lib\commands\typegen\aura\helper.js)_
 <!-- commandsstop -->
