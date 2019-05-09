@@ -280,6 +280,20 @@ export default class Generate extends SfdxCommand {
       if (node.type !== undefined) {
         returnType = node.type.getText();
       }
+
+      // Parse the Type Parameters and if needed add them to the output
+      let typeParamString = "";
+      if (node.typeParameters && node.typeParameters.length > 0) {
+        let typeParams = [];
+        node.typeParameters.forEach(tParam => {
+          typeParams.push(tParam.getText());
+        });
+        if (typeParams.length > 0) {
+          typeParamString = typeParams.join(",");
+          typeParamString = `<${typeParamString}>`;
+        }
+      }
+      // Function parameters with type merging
       node.parameters.forEach(param => {
         if (node.parameters[0] === param && param.name.getText() === "this") {
           // "this" first argument is a convenience definition only useful inside the function, not needed for the definition
@@ -296,7 +310,7 @@ export default class Generate extends SfdxCommand {
       });
 
       let paramString = params.join(", ");
-      let signature = `${methodName}(${paramString}): ${returnType};`;
+      let signature = `${methodName}${typeParamString}(${paramString}): ${returnType};`;
       return signature;
     }
 
