@@ -69,10 +69,7 @@ export default class Generate extends SfdxCommand {
         );
         let componentName = utils.getComponentName(file);
         let destFilename = flags.output + "/" + componentName + ".d.ts";
-        fs.writeFile(destFilename, generatedtypeFile, err => {
-          // throws an error, you could also catch it here
-          if (err) throw err;
-        });
+        utils.writeFile(destFilename, generatedtypeFile);
       });
     });
 

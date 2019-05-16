@@ -5,7 +5,6 @@ import * as path from "path";
 import * as glob from "glob";
 import * as mkdirp from "mkdirp";
 import Helper from "../../../lib/helper";
-import * as io from "../../../lib/io";
 
 // Initialize Messages with the current plugin directory
 core.Messages.importMessagesDirectory(__dirname);
@@ -65,7 +64,7 @@ export default class Generate extends SfdxCommand {
         let dirPath = path.parse(file);
         const dts = h.buildDTS(file, fileContents, cmpContents);
 
-        io.writeFile(output + "/" + dirPath.name + ".d.ts", dts);
+        utils.writeFile(output + "/" + dirPath.name + ".d.ts", dts);
       });
     });
     return null;
