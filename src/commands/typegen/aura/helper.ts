@@ -5,6 +5,7 @@ import * as path from "path";
 import * as glob from "glob";
 import * as mkdirp from "mkdirp";
 import Helper from "../../../lib/helper";
+import * as utils from "../../../lib/utils";
 
 // Initialize Messages with the current plugin directory
 core.Messages.importMessagesDirectory(__dirname);
