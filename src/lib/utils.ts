@@ -1,6 +1,6 @@
-import * as path from "path";
-import * as glob from "glob";
 import * as fs from "fs";
+import * as glob from "glob";
+import * as path from "path";
 
 export function writeFile(destFilename: string, dts: string): void {
   // console.log(destFilename);
@@ -11,14 +11,14 @@ export function writeFile(destFilename: string, dts: string): void {
 }
 
 export function getComponentName(file: string): string {
-  let dirPath = path.parse(file);
-  let folders = dirPath.dir.split("/");
+  const dirPath = path.parse(file);
+  const folders = dirPath.dir.split("/");
   return folders[folders.length - 1];
 }
 
 let apexTypeIndex;
 export function setApexIndex(newApexTypeIndex: Map<string, boolean>) {
-  if (newApexTypeIndex == undefined) {
+  if (newApexTypeIndex === undefined) {
     newApexTypeIndex = new Map();
   } else {
     apexTypeIndex = newApexTypeIndex;
@@ -29,13 +29,13 @@ export function getApexIndex(apexTypesPath: string): Map<string, boolean> {
     return apexTypeIndex;
   }
   apexTypeIndex = new Map();
-  let p = new Promise(function(resolve, reject) {
+  const p = new Promise(function(resolve, reject) {
     glob(apexTypesPath + "/*.d.ts", function(err, files) {
       if (err) {
         reject(err);
       }
       files.forEach(file => {
-        let fileparts = path.parse(file);
+        const fileparts = path.parse(file);
         apexTypeIndex.set(fileparts.name.split(".")[0], true);
       });
       resolve();
@@ -48,8 +48,11 @@ export function getApexIndex(apexTypesPath: string): Map<string, boolean> {
 
 export function getBaseComponent(component): string {
   let base = "";
-  if (component.$ != undefined && component.$.extends != undefined) {
-    let baseParts = component.$.extends.split(":");
+  if (
+    component.attributes !== undefined &&
+    component.attributes.extends !== undefined
+  ) {
+    const baseParts = component.attributes.extends.split(":");
     base = " & Cmp." + baseParts[0].toLowerCase() + "." + baseParts[1];
   }
   return base;
@@ -58,15 +61,18 @@ export function getBaseComponent(component): string {
 export function getController(component): string {
   let controller = "";
   // get controller
-  if (component.$ != undefined && component.$.controller != undefined) {
-    controller = " & Apex." + component.$.controller;
+  if (
+    component.attributes !== undefined &&
+    component.attributes.controller !== undefined
+  ) {
+    controller = " & Apex." + component.attributes.controller;
   }
   return controller;
 }
 
 // Used to map Java type info to typescript types
 // Because Aura is not case sensitive the comparison is always done in lower case
-let auraTypeMap = {
+const auraTypeMap = {
   boolean: "boolean",
   date: "string",
   datetime: "number",
@@ -76,18 +82,18 @@ let auraTypeMap = {
   long: "number",
   string: "string",
   list: "Array<any>",
-  object: "object",
+  object: "{[key: string]: any}",
   set: "Array<any>",
-  map: "object",
+  map: "{[key: string]: any}",
   id: "string"
 };
 export function translateType(type: string): string {
-  let isArray = type.indexOf("[]") >= 0;
+  const isArray = type.indexOf("[]") >= 0;
   type = type.replace("[]", "");
-  if (auraTypeMap[type.toLowerCase()] != undefined) {
+  if (auraTypeMap[type.toLowerCase()] !== undefined) {
     type = auraTypeMap[type.toLowerCase()];
   }
-  if (apexTypeIndex != undefined && apexTypeIndex.has(type)) {
+  if (apexTypeIndex !== undefined && apexTypeIndex.has(type)) {
     type = "Apex." + type;
   }
   if (isArray) {

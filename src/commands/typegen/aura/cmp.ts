@@ -3,8 +3,8 @@ import { AnyJson } from "@salesforce/ts-types";
 import * as fs from "fs";
 import * as glob from "glob";
 import * as mkdirp from "mkdirp";
-import * as utils from "../../../lib/utils";
 import Cmp from "../../../lib/cmp";
+import * as utils from "../../../lib/utils";
 
 // Initialize Messages with the current plugin directory
 core.Messages.importMessagesDirectory(__dirname);
@@ -17,9 +17,9 @@ export default class Generate extends SfdxCommand {
   public static description = messages.getMessage("commandDescription");
 
   public static examples = [
-    `$ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp`,
-    `$ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp --apextypespath types/apex`,
-    `$ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp`
+    "$ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp",
+    "$ sfdx typegen:cmp --file force-app/**/aura/**/*.cmp --apextypespath types/apex",
+    "$ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp"
   ];
 
   protected static flagsConfig = {
@@ -48,13 +48,13 @@ export default class Generate extends SfdxCommand {
   // protected static requiresProject = true;
 
   public async run(): Promise<AnyJson> {
-    let c = new Cmp();
-    let flags = this.flags;
+    const c = new Cmp();
+    const flags = this.flags;
     // Ensure the output directory exists
     mkdirp(this.flags.output, function(err) {
       if (err) console.error(err);
     });
-    let apexTypeIndex = utils.getApexIndex(this.flags.apextypespath);
+    const apexTypeIndex = utils.getApexIndex(this.flags.apextypespath);
     // read and parse XML file
     glob(this.flags.file, function(err, files) {
       if (err) {
@@ -62,13 +62,13 @@ export default class Generate extends SfdxCommand {
         return;
       }
       files.forEach(file => {
-        let generatedtypeFile = c.buildDTS(
+        const generatedtypeFile = c.buildDTS(
           file,
           fs.readFileSync(file).toString(),
           apexTypeIndex
         );
-        let componentName = utils.getComponentName(file);
-        let destFilename = flags.output + "/" + componentName + ".d.ts";
+        const componentName = utils.getComponentName(file);
+        const destFilename = flags.output + "/" + componentName + ".d.ts";
         utils.writeFile(destFilename, generatedtypeFile);
       });
     });

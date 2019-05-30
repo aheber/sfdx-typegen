@@ -1,28 +1,27 @@
 import * as ts from "typescript";
-import * as xml2js from "xml2js";
+import * as xmljs from "xml-js";
 import * as utils from "./utils";
 
 export default class Helper {
-  buildDTS(fileName: string, body: string, cmpBody: string): string {
-    let sourceFile = ts.createSourceFile(
+  public buildDTS(fileName: string, body: string, cmpBody: string): string {
+    const sourceFile = ts.createSourceFile(
       fileName,
       body,
       ts.ScriptTarget.ES2015,
       /*setParentNodes */ true
     );
-    let componentName = utils.getComponentName(fileName);
+    const componentName = utils.getComponentName(fileName);
 
-    let root = getRoot(sourceFile);
+    const root = getRoot(sourceFile);
     // For each property
 
-    let propStrings: string[] = [];
+    const propStrings: string[] = [];
     root.properties
       .filter(prop => {
-        // console.log(ts.SyntaxKind[prop.kind]);
-        return prop.kind == ts.SyntaxKind.PropertyAssignment;
+        return prop.kind === ts.SyntaxKind.PropertyAssignment;
       })
       .forEach(prop => {
-        let name = prop.name;
+        const name = prop.name;
         let propName;
         // Collect property name
         switch (name.kind) {
@@ -33,20 +32,17 @@ export default class Helper {
             propName = (name as ts.StringLiteral).getFullText().trim();
             break;
         }
-        // console.log("Property Name:" + propName);
         let propertyHandled: boolean;
-        let types: string[] = [];
+        const types: string[] = [];
         // TODO: collect comments preceeding the property
         prop.getChildren().forEach(val => {
           let localPropertyHandled = true;
-          // console.log("Kind:", val.kind);
           types.push(ts.SyntaxKind[val.kind]);
-          // console.log(val.getFullText());
           // Add typing for the various types of properties
           switch (val.kind) {
             case ts.SyntaxKind.FunctionExpression:
               propStrings.push(
-                buildFunctionString(propName, <ts.FunctionExpression>val)
+                buildFunctionString(propName, val as ts.FunctionExpression)
               );
               break;
             case ts.SyntaxKind.TypeAssertionExpression:
@@ -54,7 +50,7 @@ export default class Helper {
                 buildPropertyString(
                   propName,
                   val,
-                  (<ts.TypeAssertion>val).type.getText()
+                  (val as ts.TypeAssertion).type.getText()
                 )
               );
               break;
@@ -75,7 +71,7 @@ export default class Helper {
               break;
             case ts.SyntaxKind.ArrayLiteralExpression:
               propStrings.push(
-                buildArrayString(propName, <ts.ArrayLiteralExpression>val)
+                buildArrayString(propName, val as ts.ArrayLiteralExpression)
               );
               break;
             default:
@@ -97,20 +93,21 @@ export default class Helper {
         }
       });
 
-    let baseCmp = getBaseComponent(cmpBody);
+    const baseCmp = getBaseComponent(cmpBody);
 
-    return buildTyping(baseCmp, propStrings);
+    return buildTyping(propStrings);
 
-    function buildTyping(baseCmp: string, props: string[]): string {
-      let properties = props.join("\n    ");
+    function buildTyping(props: string[]): string {
+      const properties = props.join("\n    ");
+      let baseComponent = "";
       if (baseCmp.length > 0) {
-        let baseParts = baseCmp.split(":");
-        baseCmp = `extends Helper.${baseParts[0].toLowerCase()}.${
+        const baseParts = baseCmp.split(":");
+        baseComponent = `extends Helper.${baseParts[0].toLowerCase()}.${
           baseParts[1]
         }`;
       }
       return `declare namespace Helper.c {
-  interface ${componentName} ${baseCmp} {
+  interface ${componentName} ${baseComponent} {
     ${properties}
   }
 }`;
@@ -122,57 +119,53 @@ export default class Helper {
       baseReturnType: string
     ): string {
       let returnType = baseReturnType;
-      let jsDocTags = ts.getJSDocTags(node);
+      const jsDocTags = ts.getJSDocTags(node);
       jsDocTags.forEach(doc => {
-        if (doc.tagName.getText() == "type") {
-          let dType = <ts.JSDocTypeTag>doc;
+        if (doc.tagName.getText() === "type") {
+          const dType = doc as ts.JSDocTypeTag;
           returnType = dType.typeExpression.type.getText();
         }
       });
       return `${propName}:${returnType};`;
     }
 
-    function getBaseComponent(cmpBody: string): string {
-      let baseCmp = "";
-      new xml2js.Parser().parseString(cmpBody, (err, result) => {
-        // check for 'extends' attribute
-        if (
-          result["aura:component"] != undefined &&
-          result["aura:component"].$ != undefined &&
-          result["aura:component"].$.extends != undefined
-        ) {
-          baseCmp = result["aura:component"].$.extends;
-        }
-      });
-      return baseCmp;
+    function getBaseComponent(cb: string): string {
+      let b = "";
+      const xml = xmljs.xml2js(cb, { compact: false }) as xmljs.Element;
+      if (
+        xml.elements[0] !== undefined &&
+        xml.elements[0].attributes !== undefined &&
+        xml.elements[0].attributes.extends !== undefined
+      ) {
+        b = xml.elements[0].attributes.extends as string;
+      }
+      return b;
     }
 
     function buildFunctionString(
       methodName: string,
       node: ts.FunctionExpression
     ): string {
-      let jsDocTags = ts.getJSDocTags(node);
-      let tagTypeMap = {};
+      const jsDocTags = ts.getJSDocTags(node);
+      const tagTypeMap = {};
       let returnType = "any";
       if (jsDocTags != null) {
         jsDocTags.forEach(tag => {
           if (tag.tagName.getText() === "param") {
-            let paramTag = <ts.JSDocParameterTag>tag;
+            const paramTag = tag as ts.JSDocParameterTag;
             if (paramTag.typeExpression) {
               tagTypeMap[
                 paramTag.name.getText()
               ] = paramTag.typeExpression.type.getText();
             }
-            // console.log("Tag Name:", tag.tagName.getText());
-            // tagTypeMap[tag.]
           }
           if (tag.tagName.getText() === "returns") {
-            let returnTag = <ts.JSDocReturnTag>tag;
+            const returnTag = tag as ts.JSDocReturnTag;
             returnType = returnTag.typeExpression.type.getText();
           }
         });
       }
-      let params: string[] = [];
+      const params: string[] = [];
       // TODO: throw error if type in JSDoc doesn't match parameter type or if JSDoc lists too many or not enough params
       if (node.type !== undefined) {
         returnType = node.type.getText();
@@ -181,7 +174,7 @@ export default class Helper {
       // Parse the Type Parameters and if needed add them to the output
       let typeParamString = "";
       if (node.typeParameters && node.typeParameters.length > 0) {
-        let typeParams = [];
+        const typeParams = [];
         node.typeParameters.forEach(tParam => {
           typeParams.push(tParam.getText());
         });
@@ -199,15 +192,15 @@ export default class Helper {
         let typeString = "";
         if (
           param.type == null &&
-          tagTypeMap[param.name.getText()] != undefined
+          tagTypeMap[param.name.getText()] !== undefined
         ) {
           typeString = `: ${tagTypeMap[param.name.getText()]}`;
         }
         params.push(`${param.getText()}${typeString}`);
       });
 
-      let paramString = params.join(", ");
-      let signature = `${methodName}${typeParamString}(${paramString}): ${returnType};`;
+      const paramString = params.join(", ");
+      const signature = `${methodName}${typeParamString}(${paramString}): ${returnType};`;
       return signature;
     }
 
@@ -226,7 +219,7 @@ export default class Helper {
     function getRoot(node: ts.Node): ts.ObjectLiteralExpression {
       switch (node.kind) {
         case ts.SyntaxKind.ObjectLiteralExpression:
-          return <ts.ObjectLiteralExpression>node;
+          return node as ts.ObjectLiteralExpression;
       }
 
       return ts.forEachChild(node, getRoot);

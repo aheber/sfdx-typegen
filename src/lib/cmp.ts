@@ -1,40 +1,33 @@
-import * as xml2js from "xml2js";
+// import * as xml2js from "xml2js";
+import * as xmljs from "xml-js";
 import * as utils from "./utils";
-
 export default class Component {
-  buildDTS(
+  public buildDTS(
     fileName: string,
     body: string,
     apexTypeIndex?: Map<string, boolean>
   ): string {
     utils.setApexIndex(apexTypeIndex);
     let dts;
-    let componentName = utils.getComponentName(fileName);
-    new xml2js.Parser().parseString(body, (err, result) => {
-      if (err) {
-        console.error(err);
-      }
+    const componentName = utils.getComponentName(fileName);
 
-      dts = this.buildTypeFile(
-        componentName,
-        result["aura:component"] // TODO: make this application compatible
-      );
-    });
+    const xml = xmljs.xml2js(body, { compact: false });
+    dts = this.buildTypeFile(componentName, xml["elements"][0]);
     return dts;
   }
 
   private buildTypeFile(filename: string, component: any): string {
-    let base = utils.getBaseComponent(component);
-    let controller = utils.getController(component);
-    let attributeString = this.buildAttributeStrings(component);
-    let methodString = this.buildMethodStrings(component);
-    let eventString = this.buildEventStrings(component);
+    const base = utils.getBaseComponent(component);
+    const controller = utils.getController(component);
+    const attributeString = this.buildAttributeStrings(component);
+    const methodString = this.buildMethodStrings(component);
+    const eventString = this.buildEventStrings(component);
 
     // build aura:id find values
-    let idData = this.countAuraIds(["aura:component"], component);
-    let findComponentString = this.buildFindStrings(idData);
+    const idData = this.countAuraIds([component.name], component);
+    const findComponentString = this.buildFindStrings(idData);
 
-    let generatedtypeFile = `declare namespace Cmp.c {
+    const generatedtypeFile = `declare namespace Cmp.c {
   interface _${filename} extends Aura.Component {
 ${attributeString}${methodString}${findComponentString}${eventString}  }
 
@@ -46,9 +39,14 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
 
   private buildEventStrings(component): string {
     let eventString = "";
-    if (component["aura:registerEvent"] != undefined) {
-      component["aura:registerEvent"].forEach(event => {
-        eventString += `    getEvent(name: "${event.$.name}"): Aura.Event;\n`;
+    if (component.elements !== undefined) {
+      component.elements.forEach(event => {
+        if (event.name !== "aura:registerEvent") {
+          return;
+        }
+        eventString += `    getEvent(name: "${
+          event.attributes.name
+        }"): Aura.Event;\n`;
       });
     }
     return eventString;
@@ -58,49 +56,119 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
     // Build attributes
     let attributeString = `    get(key: "v.body"): Aura.Component[];\n`;
     attributeString += `    set(key: "v.body", value: Aura.Component[]): void;\n`;
-    if (component["aura:attribute"] != undefined) {
-      let attributes = [];
-      component["aura:attribute"].forEach(attribute => {
-        // Check for apex types
-        attribute.$.type = utils.translateType(attribute.$.type);
-        attributes.push(attribute.$);
-      });
-
-      attributes.forEach(attribute => {
-        attributeString += `    get(key: "v.${attribute.name}"): ${
-          attribute.type
-        };\n`;
-        attributeString += `    set(key: "v.${attribute.name}", value: ${
-          attribute.type
-        }): void;\n`;
-      });
+    const attributes = [];
+    if (component.elements === undefined) {
+      return attributeString;
     }
+    component.elements.forEach(attribute => {
+      if (attribute.name !== "aura:attribute") {
+        return;
+      }
+      // Check for apex types
+      attribute.attributes.type = utils.translateType(
+        attribute.attributes.type
+      );
+      attributes.push(attribute.attributes);
+    });
+
+    attributes.forEach(attribute => {
+      attributeString += `    get(key: "v.${attribute.name}"): ${
+        attribute.type
+      };\n`;
+      attributeString += `    set(key: "v.${attribute.name}", value: ${
+        attribute.type
+      }): void;\n`;
+    });
     return attributeString;
   }
 
   private buildMethodStrings(component): string {
     let methodString = "";
-    if (component["aura:method"] != undefined) {
-      component["aura:method"].forEach(method => {
-        let attribString = "";
-        if (method["aura:attribute"] != undefined) {
-          let methodAttribStrings = [];
-          method["aura:attribute"].forEach(attrib => {
-            attrib.$.type = utils.translateType(attrib.$.type);
-            let required = "?";
-            if (attrib.$.required == "true") {
-              required = "";
-            }
-            methodAttribStrings.push(
-              `${attrib.$.name}${required}: ${attrib.$.type}`
-            );
-          });
-          attribString = methodAttribStrings.join(", ");
-        }
-        methodString += `    ${method.$.name}(${attribString});\n`; // TODO: see if we can figure out the return type
-      });
+    if (component.elements === undefined) {
+      return methodString;
     }
+    component.elements.forEach(method => {
+      if (method.name !== "aura:method") {
+        return;
+      }
+      const methodTypeOverrides = this.parseTypes(
+        method.attributes.description
+      );
+      let typeParams = "";
+      if (methodTypeOverrides.type !== undefined) {
+        typeParams = "<" + methodTypeOverrides.type + ">";
+      }
+      if (methodTypeOverrides.returns === undefined) {
+        methodTypeOverrides.returns = "any";
+      }
+      let attribString = "";
+      if (method.elements !== undefined) {
+        const methodAttribStrings = [];
+        method.elements.forEach(attrib => {
+          if (attrib.name !== "aura:attribute") {
+            return;
+          }
+          const attributeTypeOverrides = this.parseTypes(
+            attrib.attributes.description
+          );
+          if (attributeTypeOverrides.type !== undefined) {
+            attrib.attributes.type = attributeTypeOverrides.type;
+          } else {
+            attrib.attributes.type = utils.translateType(
+              attrib.attributes.type
+            );
+          }
+          let required = "?";
+          if (attrib.attributes.required === "true") {
+            required = "";
+          }
+          methodAttribStrings.push(
+            `${attrib.attributes.name}${required}: ${attrib.attributes.type}`
+          );
+        });
+        attribString = methodAttribStrings.join(", ");
+      }
+      methodString += `    ${
+        method.attributes.name
+      }${typeParams}(${attribString}): ${methodTypeOverrides.returns};\n`; // TODO: see if we can figure out the return type
+    });
     return methodString;
+  }
+
+  private parseTypes(text: string): { [key: string]: string } {
+    const typeData = {};
+    if (text === undefined || text.length === 0) {
+      return typeData;
+    }
+    const openPos = text.indexOf("[[");
+    const closePos = text.indexOf("]]");
+    if (openPos < 0 || closePos < 0 || openPos > closePos) {
+      return typeData;
+    }
+
+    const typeInfoRaw = text.substring(openPos + 2, closePos);
+
+    // read in one character at a time
+    let name, type, finishPos;
+    for (let i = 0; i < typeInfoRaw.length; i++) {
+      switch (typeInfoRaw.charAt(i)) {
+        case "@":
+          // read until space and capture as type-attribute name
+          finishPos = typeInfoRaw.indexOf(" ", i);
+          name = typeInfoRaw.substring(i + 1, finishPos);
+          i = finishPos - 1; // move the incrementer forward (one shy as it will be increased at the end of the loop)
+          break;
+        case "{":
+          // read until } and map that as the value of the type-attribute
+          finishPos = typeInfoRaw.indexOf("}", i);
+          type = typeInfoRaw.substring(i + 1, finishPos);
+          i = finishPos - 1; // move the incrementer forward (one shy as it will be increased at the end of the loop)
+          typeData[name] = type;
+          break;
+      }
+    }
+
+    return typeData;
   }
 
   private buildFindStrings(idData: IdData): string {
@@ -110,20 +178,20 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
     Object.keys(idData).forEach(key => {
       returnTypes = [];
       let canReturnUndefined: boolean;
-      let keyCounts = {};
+      const keyCounts = {};
       idData[key].forEach(comp => {
-        if (keyCounts[comp.tag] == undefined) {
+        if (keyCounts[comp.tag] === undefined) {
           keyCounts[comp.tag] = 1;
         } else {
           keyCounts[comp.tag]++;
         }
         comp.lineage.forEach(p => {
-          let lP = p.toLowerCase();
-          if (lP == "aura:iteration") {
+          const lP = p.toLowerCase();
+          if (lP === "aura:iteration") {
             keyCounts[comp.tag]++;
             canReturnUndefined = true;
           }
-          if (lP == "aura:if") {
+          if (lP === "aura:if") {
             canReturnUndefined = true;
           }
         });
@@ -139,8 +207,8 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
       }
       Object.keys(keyCounts).forEach(cKey => {
         let cmpName = "";
-        let parts = cKey.split(":");
-        if (parts.length == 1) {
+        const parts = cKey.split(":");
+        if (parts.length === 1) {
           cmpName = "Aura.Component";
         } else {
           cmpName = "Cmp." + parts.join(".");
@@ -151,51 +219,54 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
         }
       });
 
-      let rTypes = returnTypes.join(" | ");
+      const rTypes = returnTypes.join(" | ");
       findComponentString += `    find(name: "${key}"): ${rTypes};\n`;
     });
 
     return findComponentString;
   }
 
-  private countAuraIds(parentChain: string[], component: any): IdData {
-    let that = this;
-    let componentName = parentChain[parentChain.length - 1];
-    let idData: IdData = {};
-    if (component == undefined || component == null) {
+  private countAuraIds(
+    parentChain: string[],
+    component: xmljs.Element
+  ): IdData {
+    const that = this;
+    const idData: IdData = {};
+    if (component === undefined || component == null) {
       return idData;
     }
-    Object.keys(component).forEach(key => {
-      if (key.toLowerCase() == "$") {
-        let attributes = component[key];
-        Object.keys(attributes).forEach(aKey => {
-          if (aKey.toLowerCase() == "aura:id") {
-            // add to IdData
-            let parents = [...parentChain];
-            parents.pop();
-            let compObj = { lineage: parents, tag: componentName };
-            let aId = attributes[aKey];
-            if (idData[aId] == undefined) {
-              idData[aId] = [compObj];
-            } else {
-              idData[aId].push(compObj);
-            }
+    const cmpKey = component.name as string;
+
+    // add to IdData
+    if (component.attributes !== undefined) {
+      Object.keys(component.attributes).forEach(key => {
+        if (key.toLowerCase() == "aura:id") {
+          const compObj = { lineage: parentChain, tag: cmpKey };
+          if (idData[component.attributes[key]] === undefined) {
+            idData[component.attributes[key]] = [compObj];
+          } else {
+            idData[component.attributes[key]].push(compObj);
           }
-        });
+        }
+      });
+    }
+
+    if (component.elements === undefined) {
+      return idData;
+    }
+    component.elements.forEach(element => {
+      const childIds = that.countAuraIds([...parentChain, cmpKey], element);
+      if (childIds === undefined || childIds == null) {
+        return;
       }
-      if (Array.isArray(component[key])) {
-        component[key].forEach(cKey => {
-          let childIds = that.countAuraIds([...parentChain, key], cKey);
-          // Merge IdData together
-          Object.keys(childIds).forEach(key => {
-            if (idData[key] == undefined) {
-              idData[key] = childIds[key];
-            } else {
-              idData[key].push(...childIds[key]);
-            }
-          });
-        });
-      }
+      // Merge IdData together
+      Object.keys(childIds).forEach(k => {
+        if (idData[k] === undefined) {
+          idData[k] = childIds[k];
+        } else {
+          idData[k].push(...childIds[k]);
+        }
+      });
     });
     return idData;
   }

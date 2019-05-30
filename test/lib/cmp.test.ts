@@ -226,8 +226,8 @@ describe("typegen:aura:cmp", () => {
       );
       assert.equal(
         output,
-        buildResponse(`get(key: "v.attr"): object;
-    set(key: "v.attr", value: object): void;`)
+        buildResponse(`get(key: "v.attr"): {[key: string]: any};
+    set(key: "v.attr", value: {[key: string]: any}): void;`)
       );
       done();
     });
@@ -442,6 +442,84 @@ describe("typegen:aura:cmp", () => {
         output,
         buildResponse(
           'find(name: "testId1"): undefined | Cmp.force.TestComponent | Cmp.force.TestComponent[];'
+        )
+      );
+      done();
+    });
+  });
+
+  describe("Aura Method", () => {
+    it("standard attribute types", done => {
+      let output = h.buildDTS(
+        posixFilename,
+        `<aura:component>
+        <aura:method
+        access="global"
+        name="run"
+        action="{!c.callServer}"
+        description="Invoke action, generally an Apex controller action."
+      >
+        <aura:attribute
+          name="action"
+          type="Map"
+          required="true"
+          description="An action to run"
+        />
+        <aura:attribute
+          name="params"
+          type="Map"
+          description="Parameters to be send with the action"
+        />
+        <aura:attribute
+          name="options"
+          type="Map"
+          description="Map of options, see docs."
+        />
+      </aura:method>
+</aura:component>`
+      );
+      assert.equal(
+        output,
+        buildResponse(
+          "run(action: {[key: string]: any}, params?: {[key: string]: any}, options?: {[key: string]: any}): any;"
+        )
+      );
+      done();
+    });
+
+    it("override attribute types", done => {
+      let output = h.buildDTS(
+        posixFilename,
+        `<aura:component>
+        <aura:method
+        access="global"
+        name="run"
+        action="{!c.callServer}"
+        description="[[@type {T, R}, @returns {Promise&lt;R&gt;}]]Invoke action, generally an Apex controller action."
+      >
+        <aura:attribute
+          name="action"
+          type="Map"
+          required="true"
+          description="[[@type {Aura.Action&lt;T, R&gt;}]]An action to run"
+        />
+        <aura:attribute
+          name="params"
+          type="Map"
+          description="[[@type {T}]]Parameters to be send with the action"
+        />
+        <aura:attribute
+          name="options"
+          type="Map"
+          description="[[@type {SVC_ServerHelper_Options&lt;R&gt;}]]Map of options, see docs."
+        />
+      </aura:method>
+</aura:component>`
+      );
+      assert.equal(
+        output,
+        buildResponse(
+          "run<T, R>(action: Aura.Action<T, R>, params?: T, options?: SVC_ServerHelper_Options<R>): Promise<R>;"
         )
       );
       done();
