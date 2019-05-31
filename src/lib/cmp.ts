@@ -11,7 +11,12 @@ export default class Component {
     let dts;
     const componentName = utils.getComponentName(fileName);
 
-    const xml = xmljs.xml2js(body, { compact: false });
+    const xml = xmljs.xml2js(body, { compact: false }) as XmlElement;
+
+    // Give comment elements to the next non-comment element
+    // Being used to allow comments to provide rich type information
+    this.compressComments(xml);
+
     dts = this.buildTypeFile(componentName, xml["elements"][0]);
     return dts;
   }
@@ -91,9 +96,8 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
       if (method.name !== "aura:method") {
         return;
       }
-      const methodTypeOverrides = this.parseTypes(
-        method.attributes.description
-      );
+      const methodTypeOverrides = this.parseTypes(method.comments);
+      // throw Error(JSON.stringify(method.comments));
       let typeParams = "";
       if (methodTypeOverrides.type !== undefined) {
         typeParams = "<" + methodTypeOverrides.type + ">";
@@ -108,9 +112,7 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
           if (attrib.name !== "aura:attribute") {
             return;
           }
-          const attributeTypeOverrides = this.parseTypes(
-            attrib.attributes.description
-          );
+          const attributeTypeOverrides = this.parseTypes(attrib.comments);
           if (attributeTypeOverrides.type !== undefined) {
             attrib.attributes.type = attributeTypeOverrides.type;
           } else {
@@ -135,40 +137,57 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
     return methodString;
   }
 
-  private parseTypes(text: string): { [key: string]: string } {
+  private parseTypes(comments: any[]): { [key: string]: string } {
     const typeData = {};
-    if (text === undefined || text.length === 0) {
+    if (comments === undefined || comments.length === 0) {
       return typeData;
     }
-    const openPos = text.indexOf("[[");
-    const closePos = text.indexOf("]]");
-    if (openPos < 0 || closePos < 0 || openPos > closePos) {
-      return typeData;
-    }
-
-    const typeInfoRaw = text.substring(openPos + 2, closePos);
-
-    // read in one character at a time
-    let name, type, finishPos;
-    for (let i = 0; i < typeInfoRaw.length; i++) {
-      switch (typeInfoRaw.charAt(i)) {
-        case "@":
-          // read until space and capture as type-attribute name
-          finishPos = typeInfoRaw.indexOf(" ", i);
-          name = typeInfoRaw.substring(i + 1, finishPos);
-          i = finishPos - 1; // move the incrementer forward (one shy as it will be increased at the end of the loop)
-          break;
-        case "{":
-          // read until } and map that as the value of the type-attribute
-          finishPos = typeInfoRaw.indexOf("}", i);
-          type = typeInfoRaw.substring(i + 1, finishPos);
-          i = finishPos - 1; // move the incrementer forward (one shy as it will be increased at the end of the loop)
-          typeData[name] = type;
-          break;
+    comments.forEach(element => {
+      const typeInfoRaw = element.comment;
+      console.log("Comment Body:", typeInfoRaw);
+      // read in one character at a time
+      let name;
+      let type;
+      let finishPos;
+      for (let i = 0; i < typeInfoRaw.length; i++) {
+        switch (typeInfoRaw.charAt(i)) {
+          case "@":
+            // read until space and capture as type-attribute name
+            finishPos = typeInfoRaw.indexOf(" ", i);
+            name = typeInfoRaw.substring(i + 1, finishPos);
+            i = finishPos - 1; // move the incrementer forward (one shy as it will be increased at the end of the loop)
+            break;
+          case "{":
+            // read until } and map that as the value of the type-attribute
+            finishPos = typeInfoRaw.indexOf("}", i);
+            type = typeInfoRaw.substring(i + 1, finishPos);
+            i = finishPos - 1; // move the incrementer forward (one shy as it will be increased at the end of the loop)
+            typeData[name] = type;
+            break;
+        }
       }
-    }
+    });
 
     return typeData;
+  }
+
+  private compressComments(element: XmlElement): XmlElement {
+    if (element.elements === undefined || element.elements.length === 0) {
+      return element;
+    }
+    let comments = [];
+    element.elements.forEach(ele => {
+      if (ele.type === "comment") {
+        comments.push(ele);
+      } else {
+        if (comments.length > 0) {
+          ele.comments = [...comments];
+          comments = [];
+        }
+        this.compressComments(ele);
+      }
+    });
+    return element;
   }
 
   private buildFindStrings(idData: IdData): string {
@@ -240,7 +259,7 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
     // add to IdData
     if (component.attributes !== undefined) {
       Object.keys(component.attributes).forEach(key => {
-        if (key.toLowerCase() == "aura:id") {
+        if (key.toLowerCase() === "aura:id") {
           const compObj = { lineage: parentChain, tag: cmpKey };
           if (idData[component.attributes[key]] === undefined) {
             idData[component.attributes[key]] = [compObj];
@@ -274,3 +293,7 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
 type IdData = {
   [auraid: string]: [{ lineage: string[]; tag: string }];
 };
+interface XmlElement extends xmljs.Element {
+  comments: XmlElement[];
+  elements: XmlElement[];
+}

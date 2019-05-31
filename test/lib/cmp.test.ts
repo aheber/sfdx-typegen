@@ -491,27 +491,34 @@ describe("typegen:aura:cmp", () => {
       let output = h.buildDTS(
         posixFilename,
         `<aura:component>
+        <!--
+          @type {T,R}
+          @returns {Promise<R>}
+        -->
         <aura:method
         access="global"
         name="run"
         action="{!c.callServer}"
-        description="[[@type {T, R}, @returns {Promise&lt;R&gt;}]]Invoke action, generally an Apex controller action."
+        description="Invoke action, generally an Apex controller action."
       >
+        <!-- @type {Aura.Action<T,R>} -->
         <aura:attribute
           name="action"
           type="Map"
           required="true"
-          description="[[@type {Aura.Action&lt;T, R&gt;}]]An action to run"
+          description="An action to run"
         />
+        <!-- @type {T} -->
         <aura:attribute
           name="params"
           type="Map"
-          description="[[@type {T}]]Parameters to be send with the action"
+          description="Parameters to be send with the action"
         />
+        <!-- @type {SVC_ServerHelper_Options<R>} -->
         <aura:attribute
           name="options"
           type="Map"
-          description="[[@type {SVC_ServerHelper_Options&lt;R&gt;}]]Map of options, see docs."
+          description="Map of options, see docs."
         />
       </aura:method>
 </aura:component>`
