@@ -1,0 +1,6 @@
+{
+  "commandDescription": "Generate component types that can be used in your controller and helper files to improve auto-complete and correctness",
+  "fileFlagDescription": "Glob pattern for cmp files",
+  "apextypespathFlagDescription": "Path to typing directory that holds compatible types for AuraEnabled properties in Apex controllers and classes",
+  "outputFlagDescription": "Path to typing output directory, typically embedded in the project '.sfdx' directory"
+}

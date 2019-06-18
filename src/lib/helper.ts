@@ -132,12 +132,18 @@ export default class Helper {
     function getBaseComponent(cb: string): string {
       let b = "";
       const xml = xmljs.xml2js(cb, { compact: false }) as xmljs.Element;
+      let c;
+      xml.elements.forEach(ele => {
+        if (c === undefined && ele.type !== "comment") {
+          c = ele;
+        }
+      });
       if (
-        xml.elements[0] !== undefined &&
-        xml.elements[0].attributes !== undefined &&
-        xml.elements[0].attributes.extends !== undefined
+        c !== undefined &&
+        c.attributes !== undefined &&
+        c.attributes.extends !== undefined
       ) {
-        b = xml.elements[0].attributes.extends as string;
+        b = c.attributes.extends as string;
       }
       return b;
     }

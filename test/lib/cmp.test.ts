@@ -1,10 +1,10 @@
-import Helper from "../../src/lib/cmp";
 import * as assert from "assert";
+import Helper from "../../src/lib/cmp";
 
 const posixFilename =
   "/dir1/dir2/dir3/force-app/main/default/aura/TestComponent/TestComponent.cmp";
 function buildResponse(attributes: string, extensions?: string) {
-  if (extensions == undefined) {
+  if (extensions === undefined) {
     extensions = "";
   }
   if (attributes.length > 0) {
@@ -22,15 +22,27 @@ function buildResponse(attributes: string, extensions?: string) {
 }
 
 describe("typegen:aura:cmp", () => {
-  let h = new Helper();
-  /////////////////////////////////////////////
-  /* Tests TODO
-    // TODO: component with complex type overrides for attribute and methods params
-    // TODO: Application instead of component
-  */
+  const h = new Helper();
+
+  it("has leading comment", done => {
+    const output = h.buildDTS(
+      posixFilename,
+      `<!-- leading comment -->
+    <aura:component>
+<aura:attribute name="attr" type="Integer"/>
+</aura:component>`
+    );
+    assert.equal(
+      output,
+      buildResponse(`get(key: "v.attr"): number;
+    set(key: "v.attr", value: number): void;`)
+    );
+    done();
+  });
+
   describe("component top-level attributes", () => {
     it("without controller or base", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component></aura:component>`
       );
@@ -39,7 +51,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("with controller", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component controller="Ctrl"></aura:component>`
       );
@@ -48,7 +60,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("with base", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component extends="c:BaseCmp"></aura:component>`
       );
@@ -57,7 +69,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("with controller and base", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component extends="c:BaseCmp" controller="Ctrl"></aura:component>`
       );
@@ -68,7 +80,7 @@ describe("typegen:aura:cmp", () => {
 
   describe("component attributes", () => {
     it("string", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="string"/>
@@ -83,7 +95,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("boolean", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Boolean"/>
@@ -98,7 +110,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("integer", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Integer"/>
@@ -113,7 +125,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("decimal", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Decimal"/>
@@ -128,7 +140,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("double", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Double"/>
@@ -143,7 +155,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("date", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Date"/>
@@ -158,7 +170,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("datetime", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Datetime"/>
@@ -173,7 +185,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("long", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Long"/>
@@ -188,7 +200,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("list", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="List"/>
@@ -203,7 +215,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("set", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Set"/>
@@ -218,7 +230,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("map", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Map"/>
@@ -233,7 +245,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("id", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="Id"/>
@@ -248,7 +260,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("string array", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="String[]"/>
@@ -265,7 +277,7 @@ describe("typegen:aura:cmp", () => {
 
   describe("Apex attributes", () => {
     it("Single Apex Attribute", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:attribute name="attr" type="ApexWrapper"/>
@@ -281,7 +293,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("Non-Indexed Apex Attribute", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
       <aura:attribute name="attr" type="ApexWrapper"/>
@@ -299,7 +311,7 @@ describe("typegen:aura:cmp", () => {
 
   describe("Events", () => {
     it("Registered Event", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:registerEvent name="CustomEvent" type="c:MyEventType" />
@@ -313,7 +325,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("Registered Event", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:registerEvent name="CustomEvent" type="c:MyEventType" />
@@ -331,7 +343,7 @@ describe("typegen:aura:cmp", () => {
 
   describe("Aura Ids", () => {
     it("Custom Component", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <c:Custom_Component aura:id="testId1"/>
@@ -345,7 +357,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("Two Identical Custom Components", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <c:Custom_Component aura:id="testId1"/>
@@ -363,7 +375,7 @@ describe("typegen:aura:cmp", () => {
 
     // Two different custom components
     it("Two Different Custom Components", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
       <c:Custom_Component aura:id="testId1"/>
@@ -381,7 +393,7 @@ describe("typegen:aura:cmp", () => {
 
     // standard HTML element
     it("Standard HTML element", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
       <div aura:id="testId1"/>
@@ -396,7 +408,7 @@ describe("typegen:aura:cmp", () => {
 
     // Platform Component
     it("Components without the 'c' namespace", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
       <force:TestComponent aura:id="testId1"/>
@@ -411,7 +423,7 @@ describe("typegen:aura:cmp", () => {
 
     // Component in aura:if
     it("Conditionally rendered component", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:if>
@@ -430,7 +442,7 @@ describe("typegen:aura:cmp", () => {
 
     // Component in aura:iteration
     it("Possible multiple rendered components with same id", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
     <aura:iteration>
@@ -450,7 +462,7 @@ describe("typegen:aura:cmp", () => {
 
   describe("Aura Method", () => {
     it("standard attribute types", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
         <aura:method
@@ -488,7 +500,7 @@ describe("typegen:aura:cmp", () => {
     });
 
     it("override attribute types", done => {
-      let output = h.buildDTS(
+      const output = h.buildDTS(
         posixFilename,
         `<aura:component>
         <!--
@@ -526,7 +538,7 @@ describe("typegen:aura:cmp", () => {
       assert.equal(
         output,
         buildResponse(
-          "run<T, R>(action: Aura.Action<T, R>, params?: T, options?: SVC_ServerHelper_Options<R>): Promise<R>;"
+          "run<T,R>(action: Aura.Action<T,R>, params?: T, options?: SVC_ServerHelper_Options<R>): Promise<R>;"
         )
       );
       done();

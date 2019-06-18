@@ -83,7 +83,7 @@ const auraTypeMap = {
   string: "string",
   list: "Array<any>",
   object: "{[key: string]: any}",
-  set: "Array<any>",
+  set: "Set<any>",
   map: "{[key: string]: any}",
   id: "string"
 };

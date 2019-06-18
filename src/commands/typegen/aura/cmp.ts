@@ -28,7 +28,7 @@ export default class Generate extends SfdxCommand {
       char: "f",
       description: messages.getMessage("fileFlagDescription"),
       required: false,
-      default: "force-app/**/aura/**/*.cmp"
+      default: "force-app/**/aura/**/*.cmp,force-app/**/aura/**/*.app"
     }),
     apextypespath: flags.string({
       char: "a",
@@ -56,20 +56,23 @@ export default class Generate extends SfdxCommand {
     });
     const apexTypeIndex = utils.getApexIndex(this.flags.apextypespath);
     // read and parse XML file
-    glob(this.flags.file, function(err, files) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      files.forEach(file => {
-        const generatedtypeFile = c.buildDTS(
-          file,
-          fs.readFileSync(file).toString(),
-          apexTypeIndex
-        );
-        const componentName = utils.getComponentName(file);
-        const destFilename = flags.output + "/" + componentName + ".d.ts";
-        utils.writeFile(destFilename, generatedtypeFile);
+    this.flags.file.split(",").forEach(gFile => {
+      gFile = gFile.trim();
+      glob(gFile, function(err, files) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        files.forEach(file => {
+          const generatedtypeFile = c.buildDTS(
+            file,
+            fs.readFileSync(file).toString(),
+            apexTypeIndex
+          );
+          const componentName = utils.getComponentName(file);
+          const destFilename = flags.output + "/" + componentName + ".d.ts";
+          utils.writeFile(destFilename, generatedtypeFile);
+        });
       });
     });
 

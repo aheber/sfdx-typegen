@@ -16,8 +16,13 @@ export default class Component {
     // Give comment elements to the next non-comment element
     // Being used to allow comments to provide rich type information
     this.compressComments(xml);
-
-    dts = this.buildTypeFile(componentName, xml["elements"][0]);
+    let c;
+    xml.elements.forEach(ele => {
+      if (c === undefined && ele.type !== "comment") {
+        c = ele;
+      }
+    });
+    dts = this.buildTypeFile(componentName, c);
     return dts;
   }
 
@@ -75,7 +80,6 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
       );
       attributes.push(attribute.attributes);
     });
-
     attributes.forEach(attribute => {
       attributeString += `    get(key: "v.${attribute.name}"): ${
         attribute.type
@@ -144,7 +148,6 @@ ${attributeString}${methodString}${findComponentString}${eventString}  }
     }
     comments.forEach(element => {
       const typeInfoRaw = element.comment;
-      console.log("Comment Body:", typeInfoRaw);
       // read in one character at a time
       let name;
       let type;

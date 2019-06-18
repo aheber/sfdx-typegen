@@ -1,10 +1,10 @@
 import { core, flags, SfdxCommand } from "@salesforce/command";
 import { AnyJson } from "@salesforce/ts-types";
 import * as fs from "fs";
-import * as path from "path";
 import * as glob from "glob";
 import * as mkdirp from "mkdirp";
-import Helper from "../../../lib/helper";
+import * as path from "path";
+import Lwc from "../../../lib/lwc";
 import * as utils from "../../../lib/utils";
 
 // Initialize Messages with the current plugin directory
@@ -12,15 +12,15 @@ core.Messages.importMessagesDirectory(__dirname);
 
 // Load the specific messages for this file. Messages from @salesforce/command, @salesforce/core,
 // or any library that is using the messages framework can also be loaded this way.
-const messages = core.Messages.loadMessages("sfdx-typegen", "typegenhelper");
+const messages = core.Messages.loadMessages("sfdx-typegen", "typegenauralwc");
 
 export default class Generate extends SfdxCommand {
   public static description = messages.getMessage("commandDescription");
 
   public static examples = [
-    `$ sfdx typegen:helper`,
-    `$ sfdx typegen:helper --file force-app/**/aura/**/*Controller.ts`,
-    `$ sfdx typegen:helper --file force-app/main/default/aura/TestComponent/TestComponentController.js`
+    `$ sfdx typegen:aura:lwc`,
+    `$ sfdx typegen:aura:lwc --file force-app/**/lwc/**/*.js`,
+    `$ sfdx typegen:aura:lwc --file force-app/main/default/lwc/testComponent/testComponent.js`
   ];
 
   protected static flagsConfig = {
@@ -29,13 +29,13 @@ export default class Generate extends SfdxCommand {
       char: "f",
       description: messages.getMessage("fileFlagDescription"),
       required: false,
-      default: "force-app/**/aura/**/*Controller.ts"
+      default: "force-app/**/lwc/**/*.js"
     }),
     output: flags.string({
       char: "o",
       description: messages.getMessage("outputFlagDescription"),
       required: false,
-      default: ".sfdx/typings/aura/controller"
+      default: ".sfdx/typings/aura/lwc"
     })
   };
 
@@ -43,27 +43,19 @@ export default class Generate extends SfdxCommand {
   // protected static requiresProject = true;
 
   public async run(): Promise<AnyJson> {
-    let h = new Helper();
-    let output = this.flags.output;
+    const lwc = new Lwc();
+    const output = this.flags.output;
 
     // Ensure the output directory exists
-    mkdirp(output, function(err) {
+    mkdirp(output, err => {
       if (err) console.error(err);
     });
     // Parse a file
-    glob(this.flags.file, function(err, files) {
+    glob(this.flags.file, (err, files) => {
       files.forEach(file => {
-        let cmpFilename = file.replace(/[Hh]elper.[tj]s/, ".cmp");
-        try {
-          fs.accessSync(cmpFilename, fs.constants.R_OK);
-        } catch (err) {
-          // No cmp file means we have an Appplication component
-          cmpFilename = file.replace(/[Hh]elper.[tj]s/, ".app");
-        }
         const fileContents = fs.readFileSync(file).toString();
-        const cmpContents = fs.readFileSync(cmpFilename).toString();
-        let dirPath = path.parse(file);
-        const dts = h.buildDTS(file, fileContents, cmpContents);
+        const dirPath = path.parse(file);
+        const dts = lwc.buildDTS(file, fileContents);
 
         utils.writeFile(output + "/" + dirPath.name + ".d.ts", dts);
       });

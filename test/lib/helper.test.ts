@@ -48,6 +48,23 @@ describe("typegen:aura:helper", () => {
       );
       done();
     });
+
+    it("with base component with leading comment", done => {
+      let output = h.buildDTS(
+        helperPosixFilename,
+        typedHelper,
+        `<!-- leading comment -->${cmpWithBase}`
+      );
+      assert.equal(
+        output,
+        `declare namespace Helper.c {
+  interface TestComponent extends Helper.c.TestBaseComp {
+    method1(cmp: Cmp.c.TestComponent, event: Aura.Event): any;
+  }
+}`
+      );
+      done();
+    });
   });
   /////////////////////////////////////////////
   describe("untyped helper method", () => {

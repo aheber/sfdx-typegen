@@ -23,7 +23,7 @@ $ npm install -g sfdx-typegen
 $ sfdx COMMAND
 running command...
 $ sfdx (-v|--version|version)
-sfdx-typegen/0.6.0 win32-x64 node-v10.15.3
+sfdx-typegen/0.6.2 win32-x64 node-v10.15.3
 $ sfdx --help [COMMAND]
 USAGE
   $ sfdx COMMAND
@@ -45,6 +45,7 @@ USAGE
 <!-- commands -->
 * [`sfdx typegen:aura:cmp [-f <string>] [-a <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-typegenauracmp--f-string--a-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx typegen:aura:helper [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-typegenaurahelper--f-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
+* [`sfdx typegen:aura:lwc [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-typegenauralwc--f-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 
 ## `sfdx typegen:aura:cmp [-f <string>] [-a <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -62,8 +63,9 @@ OPTIONS
                                                                                     Apex controllers and classes
 
   -f, --file=file                                                                   [default:
-                                                                                    force-app/**/aura/**/*.cmp] Glob
-                                                                                    pattern for cmp files
+                                                                                    force-app/**/aura/**/*.cmp,force-app
+                                                                                    /**/aura/**/*.app] Glob pattern for
+                                                                                    cmp files
 
   -o, --output=output                                                               [default: .sfdx/typings/aura/] Path
                                                                                     to typing output directory,
@@ -81,7 +83,7 @@ EXAMPLES
   $ sfdx typegen:cmp --file force-app/main/default/aura/TestComponent/TestComponent.cmp
 ```
 
-_See code: [lib\commands\typegen\aura\cmp.js](https://github.com/aheber/sfdx-typegen/blob/v0.6.0/lib\commands\typegen\aura\cmp.js)_
+_See code: [lib\commands\typegen\aura\cmp.js](https://github.com/aheber/sfdx-typegen/blob/v0.6.2/lib\commands\typegen\aura\cmp.js)_
 
 ## `sfdx typegen:aura:helper [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
 
@@ -114,7 +116,38 @@ EXAMPLES
   $ sfdx typegen:helper --file force-app/main/default/aura/TestComponent/TestComponentHelper.cmp
 ```
 
-_See code: [lib\commands\typegen\aura\helper.js](https://github.com/aheber/sfdx-typegen/blob/v0.6.0/lib\commands\typegen\aura\helper.js)_
+_See code: [lib\commands\typegen\aura\helper.js](https://github.com/aheber/sfdx-typegen/blob/v0.6.2/lib\commands\typegen\aura\helper.js)_
+
+## `sfdx typegen:aura:lwc [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`
+
+Generate component types that can be used in your controller and helper files to improve auto-complete and correctness
+
+```
+USAGE
+  $ sfdx typegen:aura:lwc [-f <string>] [-o <string>] [--json] [--loglevel 
+  trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
+
+OPTIONS
+  -f, --file=file                                                                   [default: force-app/**/lwc/**/*.js]
+                                                                                    Glob pattern for cmp files
+
+  -o, --output=output                                                               [default: .sfdx/typings/aura/lwc]
+                                                                                    Path to typing output directory,
+                                                                                    typically embedded in the project
+                                                                                    '.sfdx' directory
+
+  --json                                                                            format output as json
+
+  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for
+                                                                                    this command invocation
+
+EXAMPLES
+  $ sfdx typegen:aura:lwc
+  $ sfdx typegen:aura:lwc --file force-app/**/lwc/**/*.js
+  $ sfdx typegen:aura:lwc --file force-app/main/default/lwc/testComponent/testComponent.js
+```
+
+_See code: [lib\commands\typegen\aura\lwc.js](https://github.com/aheber/sfdx-typegen/blob/v0.6.2/lib\commands\typegen\aura\lwc.js)_
 <!-- commandsstop -->
 * [`sfdx typegen:aura:cmp [-f <string>] [-a <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-typegenauracmp--f-string--a-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
 * [`sfdx typegen:aura:helper [-f <string>] [-o <string>] [--json] [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]`](#sfdx-typegenaurahelper--f-string--o-string---json---loglevel-tracedebuginfowarnerrorfataltracedebuginfowarnerrorfatal)
